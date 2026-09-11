@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { asLimitError } from "@/lib/limits";
-import { SAMPLE_DEBTS, SAMPLE_EXPENSES, SAMPLE_INCOME } from "@/lib/sample-data";
+import { getSampleData } from "@/lib/sample-data";
 import type { BudgetItem, Debt, DebtInput, Profile, Strategy, Workspace } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
 
@@ -259,8 +259,19 @@ export async function insertSampleData() {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Not signed in.");
 
+  const { data: profileRow, error: profileError } = await supabase
+    .from("profiles")
+    .select("language_code, currency_code")
+    .eq("id", auth.user.id)
+    .single();
+  if (profileError || !profileRow) {
+    throw new Error("Profile missing. Apply backend/supabase/migrations/0001_init.sql.");
+  }
+
+  const sample = getSampleData(profileRow.currency_code, profileRow.language_code);
+
   const { error: debtError } = await supabase.from("debt_entity").insert(
-    SAMPLE_DEBTS.map((debt) => ({
+    sample.debts.map((debt) => ({
       user_id: auth.user!.id,
       name: debt.name,
       category: debt.category,
@@ -275,11 +286,11 @@ export async function insertSampleData() {
   if (debtError) throw asLimitError(debtError);
 
   const workspace = await getWorkspace(supabase);
-  await supabase.from("expense").update({ income: SAMPLE_INCOME }).eq("id", workspace.expenseId);
+  await supabase.from("expense").update({ income: sample.income }).eq("id", workspace.expenseId);
 
   for (const item of workspace.items) {
     if (item.isDebt) continue;
-    const amount = SAMPLE_EXPENSES[item.key];
+    const amount = sample.expenses[item.key];
     if (amount === undefined) continue;
     await supabase.from("expense_spending").update({ amount }).eq("id", item.id);
   }

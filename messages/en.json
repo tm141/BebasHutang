@@ -113,7 +113,7 @@
     "confirmDelete": "Remove this debt?",
     "logPayment": "Log payment",
     "sample": "Start with sample data",
-    "sampleHint": "Example figures are stored as-is in your currency. They are not converted."
+    "sampleHint": "Example figures are sized for your currency."
   },
   "debtForm": {
     "addTitle": "Add a new debt",

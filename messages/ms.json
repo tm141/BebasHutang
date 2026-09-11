@@ -113,7 +113,7 @@
     "confirmDelete": "Buang hutang ini?",
     "logPayment": "Catat bayaran",
     "sample": "Mula dengan data contoh",
-    "sampleHint": "Angka contoh disimpan apa adanya dalam mata wang anda. Ia tidak ditukar."
+    "sampleHint": "Angka contoh disesuaikan dengan mata wang anda."
   },
   "debtForm": {
     "addTitle": "Tambah hutang baharu",

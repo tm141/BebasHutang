@@ -113,7 +113,7 @@
     "confirmDelete": "Hapus utang ini?",
     "logPayment": "Catat pembayaran",
     "sample": "Mulai dengan data contoh",
-    "sampleHint": "Angka contoh disimpan apa adanya dalam mata uangmu. Tidak dikonversi."
+    "sampleHint": "Angka contoh disesuaikan dengan mata uangmu."
   },
   "debtForm": {
     "addTitle": "Tambah utang baru",

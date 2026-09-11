@@ -6,6 +6,8 @@ import { SparkleIcon } from "@/components/Icons";
 import { TurnstileWidget, turnstileSiteKey } from "@/components/TurnstileWidget";
 import { Link, useRouter } from "@/i18n/navigation";
 import { BRAND } from "@/lib/brand";
+import { currencies } from "@/lib/currency/registry";
+import { languages } from "@/lib/i18n/languages";
 import { limitErrorCode } from "@/lib/limits";
 import { suggestCurrency } from "@/lib/region";
 import { createClient } from "@/lib/supabase/client";
@@ -14,10 +16,14 @@ import { startDemo } from "@/lib/supabase/queries";
 
 export default function DemoPage() {
   const t = useTranslations("demo");
+  const auth = useTranslations("auth");
   const limits = useTranslations("limits");
   const setup = useTranslations("setup");
   const locale = useLocale();
   const router = useRouter();
+  const [languageCode, setLanguageCode] = useState(locale);
+  const [currencyCode, setCurrencyCode] = useState(suggestCurrency(locale));
+  const [currencyTouched, setCurrencyTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -39,8 +45,13 @@ export default function DemoPage() {
     setWorking(true);
     setError(null);
     try {
-      await startDemo(locale, suggestCurrency(locale), captchaToken ?? undefined);
-      router.replace("/dashboard");
+      if (alreadyIn) {
+        await startDemo(locale, suggestCurrency(locale), captchaToken ?? undefined);
+        router.replace("/dashboard");
+        return;
+      }
+      await startDemo(languageCode, currencyCode, captchaToken ?? undefined);
+      router.replace("/dashboard", { locale: languageCode });
     } catch (err) {
       const message = err instanceof Error ? err.message : "";
       const code = limitErrorCode(message);
@@ -71,7 +82,44 @@ export default function DemoPage() {
           <h1 className="text-2xl font-700 text-teal-950">{t("title")}</h1>
           <p className="text-sm text-teal-500 mt-1">{t("body")}</p>
         </div>
-        {!alreadyIn && <TurnstileWidget onToken={setCaptchaToken} />}
+        {!alreadyIn && (
+          <>
+            <label className="block">
+              <span className="text-sm font-500 text-teal-700">{auth("language")}</span>
+              <select
+                value={languageCode}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setLanguageCode(next);
+                  if (!currencyTouched) setCurrencyCode(suggestCurrency(next));
+                }}
+                className="field mt-1"
+              >
+                {languages.list().map((language) => (
+                  <option key={language.code} value={language.code}>{language.nativeName}</option>
+                ))}
+              </select>
+              <span className="text-xs text-teal-400">{auth("languageHint")}</span>
+            </label>
+            <label className="block">
+              <span className="text-sm font-500 text-teal-700">{auth("currency")}</span>
+              <select
+                value={currencyCode}
+                onChange={(e) => {
+                  setCurrencyTouched(true);
+                  setCurrencyCode(e.target.value);
+                }}
+                className="field mt-1"
+              >
+                {currencies.list().map((currency) => (
+                  <option key={currency.code} value={currency.code}>{currency.name} ({currency.code})</option>
+                ))}
+              </select>
+              <span className="text-xs text-teal-400">{auth("currencyHint")}</span>
+            </label>
+            <TurnstileWidget onToken={setCaptchaToken} />
+          </>
+        )}
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
           type="button"
