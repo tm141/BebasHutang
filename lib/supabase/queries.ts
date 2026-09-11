@@ -360,9 +360,15 @@ export async function claimDemoAccount(email: string, password: string) {
   return data;
 }
 
-export async function signIn(email: string, password: string) {
+export async function signIn(email: string, password: string, captchaToken?: string) {
   const supabase = createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+    options: {
+      ...(captchaToken ? { captchaToken } : {}),
+    },
+  });
   if (error) throw new Error(error.message);
 }
 

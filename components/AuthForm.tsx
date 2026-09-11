@@ -35,7 +35,7 @@ export function AuthForm({
   const [saving, setSaving] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const missingEnv = !getSupabaseEnv();
-  const captchaRequired = mode === "signup" && Boolean(turnstileSiteKey());
+  const captchaRequired = Boolean(turnstileSiteKey());
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -43,7 +43,7 @@ export function AuthForm({
     setError(null);
     try {
       if (mode === "login") {
-        await signIn(email, password);
+        await signIn(email, password, captchaToken ?? undefined);
         router.replace("/dashboard");
         return;
       }
@@ -118,7 +118,7 @@ export function AuthForm({
                 </label>
               </>
             )}
-            {mode === "signup" && <TurnstileWidget onToken={setCaptchaToken} />}
+            <TurnstileWidget onToken={setCaptchaToken} />
             {error && <p className="text-sm text-red-600">{error}</p>}
             <button
               disabled={saving || (captchaRequired && !captchaToken)}
